@@ -1,6 +1,7 @@
 import { Models } from './models/models';
 import { DirWatcher } from './dirwatcher';
 import { Importer } from './importer';
+import { fnc } from './utils/streams';
 import * as config from './config/config.json';
 
 const user1 = new Models['User']();
