@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const csv = require('csvtojson');
 const argv = require('minimist')(process.argv.slice(2),{
     alias: {
         a: 'action',
@@ -33,7 +34,7 @@ const cssCode = '.ngmp18 {\n' +
 
 switch (argv.action) {
     case 'outputFile':
-        outputFile(argv.file);
+        outputFile(argv.path);
         break;
     case 'reverse':
         reverse('revarg');
@@ -42,10 +43,10 @@ switch (argv.action) {
         reverse('transform');
         break;
     case 'convertFromFile':
-        reverse('convertFromFile');
+        convertFromFile(argv.file);
         break;
     case 'convertToFile':
-        reverse('convertToFile');
+        convertToFile(argv.file);
         break;
     case 'cssBundler':
         if (argv.path) {
@@ -65,17 +66,51 @@ console.dir(argv);
 
 function reverse(str) {
     console.log(str);
+    process.stdin.setEncoding('utf8');
+
+    process.stdin.on('readable', () => {
+        const chunk = process.stdin.read();
+        if (chunk !== null) {
+            process.stdout.write(`data: ${chunk}`);
+        }
+    });
+
+    process.stdin.on('end', () => {
+        process.stdout.write('end');
+    });
 }
 
 function transform(str) { /* ... */ }
 
-function outputFile() {
+function outputFile(filePath) {
     console.log('outputFile');
+    const stream = fs.createReadStream(__dirname + '/' + filePath);
+    stream.on('error', (err) => {
+        console.log(err);
+    });
+    stream.pipe(process.stdout);
+
 }
 
-function convertFromFile(filePath) { /* ... */ }
+function convertFromFile(filePath) {
+    console.log(__dirname + '/' + filePath);
+    fs.createReadStream(__dirname + '/' + filePath, {encoding: 'utf-8'})
+        .pipe(csv())
+        .on('data', function (data) {
+            process.stdout.write(data.toString());
+        });
+}
 
-function convertToFile(filePath) { /* ... */ }
+function convertToFile(filePath) {
+    const fileName = path.parse(filePath).name;
+    console.log(__dirname + '/' + fileName + '.json');
+    let writeStream = fs.createWriteStream(__dirname + '/' + fileName + '.json');
+
+    fs.createReadStream(__dirname + '/' + filePath, {encoding: 'utf-8'})
+        .pipe(csv())
+        .pipe(writeStream);
+    // writeStream.end();
+}
 
 function showHelpMsg() {
     console.log(helpMsg)

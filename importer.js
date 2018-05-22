@@ -3,7 +3,6 @@ const eventEmitter = require('./dirwatcher').eventEmitter;
 const csv = require('csvtojson');
 const _ = require('lodash');
 
-const converter = csv();
 
 export class Importer {
     constructor() {
